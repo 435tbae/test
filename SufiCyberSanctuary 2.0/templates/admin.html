@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>後台留言</title>
+</head>
+<body style="background:#111; color:#fff; padding:30px;">
+<h2>慧忍神宮｜後台留言</h2>
+<a href="/admin/logout" style="color:#ff6666;">登出</a>
+<hr>
+{% for m in messages %}
+<div style="border-bottom:1px solid #333; padding:10px 0;">
+    <div>#{{ m.id }}｜{{ m.name }}｜{{ m.time }}</div>
+    <div style="margin-top:5px; font-size:18px;">{{ m.content }}</div>
+</div>
+{% else %}
+<p>暫無留言</p>
+{% endfor %}
+</body>
+</html>

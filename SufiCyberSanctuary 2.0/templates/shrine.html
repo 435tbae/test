@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>慧忍神宮 | Inner Shrine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <div style="text-align: center;">
+        <!-- 完全保留你原来的标题，无任何改动 -->
+        <h2 style="letter-spacing: 15px; font-size: 2rem;">慧忍神宮</h2>
+        <p style="color: #666; margin-top: 10px;">INNER SHRINE OF WISDOM</p>
+
+        <!-- 完整表单，仅新增内容，原有样式完全保留 -->
+        <form id="messageForm">
+            <!-- 新增：姓名输入框，样式和原有输入框完全统一 -->
+            <input type="text"
+                   name="user_name"
+                   id="userName"
+                   style="background: transparent; border: none; border-bottom: 1px solid #FFFFFF; color: #FFFFFF; font-size: 1.2rem; width: 400px; text-align: center; margin-top: 40px; outline: none;"
+                   placeholder="（您的稱呼，不填則為匿名信眾）"
+                   autocomplete="off">
+
+            <!-- 完全保留你原来的留言输入框，样式、文字、位置无任何改动 -->
+            <input type="text"
+                   name="message_content"
+                   id="messageContent"
+                   style="background: transparent; border: none; border-bottom: 1px solid #FFFFFF; color: #FFFFFF; font-size: 1.5rem; width: 400px; text-align: center; margin-top: 30px; outline: none;"
+                   placeholder="（在此述說您的苦難...）"
+                   autocomplete="off"
+                   required>
+
+            <!-- 新增：呈上按钮，完全贴合原有极简风格，无多余设计 -->
+            <button type="submit"
+                    id="submitBtn"
+                    style="background: transparent; border: 1px solid #FFFFFF; color: #FFFFFF; font-size: 1rem; padding: 8px 30px; margin-top: 50px; cursor: pointer; letter-spacing: 8px; transition: all 0.3s ease;"
+                    onmouseover="this.style.background='#FFFFFF'; this.style.color='#000000';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#FFFFFF';">
+                呈 上
+            </button>
+        </form>
+
+        <!-- 完全保留你原来的返回链接，无任何改动 -->
+        <a href="/" style="margin-top: 100px; display: block; color: #444; text-decoration: none;">← 返回虛空 / RETURN TO VOID</a>
+    </div>
+
+    <!-- 提交功能JS，不影响页面布局 -->
+    <script>
+        document.getElementById('messageForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const nameInput = document.getElementById('userName');
+            const contentInput = document.getElementById('messageContent');
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = '傳 送 中...';
+
+            try {
+                const res = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: nameInput.value.trim() || '匿名信眾',
+                        content: contentInput.value.trim()
+                    })
+                });
+
+                const result = await res.json();
+                alert(result.message || result.error);
+                if (res.ok) {
+                    nameInput.value = '';
+                    contentInput.value = '';
+                }
+            } catch (error) {
+                console.error('提交錯誤:', error);
+                alert('網路異常，請稍後再試');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = '呈 上';
+            }
+        };
+    </script>
+</body>
+</html>
