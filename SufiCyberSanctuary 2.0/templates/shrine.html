@@ -111,12 +111,97 @@
             </button>
         </form>
 
-        <!-- 完全保留你原来的返回链接，无任何改动 -->
+        <!-- 邮箱订阅区域 -->
+        <div style="margin-top: 60px; padding-top: 40px; border-top: 1px solid #333;">
+            <p style="color: #888; font-size: 0.9rem; letter-spacing: 3px; margin-bottom: 20px;">訂閱神宮慧音</p>
+
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px;">
+                <label style="color: #AAA; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox"
+                           id="subscribeCheck"
+                           style="width: 16px; height: 16px; cursor: pointer; accent-color: #FFFFFF;">
+                    <span>免費訂閱神宮更新</span>
+                </label>
+            </div>
+
+            <div id="emailInputContainer" style="display: none; margin-top: 15px;">
+                <input type="email"
+                       id="subscriberEmail"
+                       style="background: transparent; border: none; border-bottom: 1px solid #666; color: #FFFFFF; font-size: 1rem; width: 300px; text-align: center; outline: none; padding: 5px 0;"
+                       placeholder="請輸入您的郵箱地址"
+                       autocomplete="email">
+
+                <button type="button"
+                        id="subscribeBtn"
+                        style="background: transparent; border: 1px solid #666; color: #AAAAAA; font-size: 0.9rem; padding: 6px 25px; margin-top: 20px; cursor: pointer; letter-spacing: 5px; transition: all 0.3s ease;"
+                        onmouseover="this.style.borderColor='#FFFFFF'; this.style.color='#FFFFFF';"
+                        onmouseout="this.style.borderColor='#666'; this.style.color='#AAAAAA';">
+                    訂 閱
+                </button>
+            </div>
+        </div>
+
         <a href="/" style="margin-top: 100px; display: block; color: #444; text-decoration: none;">← 返回虛空 / RETURN TO VOID</a>
     </div>
 
-    <!-- 提交功能JS，不影响页面布局 -->
     <script>
+        // 订阅复选框控制邮箱输入框显示/隐藏
+        document.getElementById('subscribeCheck').addEventListener('change', function() {
+            const emailContainer = document.getElementById('emailInputContainer');
+            if (this.checked) {
+                emailContainer.style.display = 'block';
+                emailContainer.style.animation = 'fadeIn 0.5s ease-in';
+            } else {
+                emailContainer.style.display = 'none';
+            }
+        });
+
+        // 订阅按钮点击事件
+        document.getElementById('subscribeBtn').addEventListener('click', async function() {
+            const email = document.getElementById('subscriberEmail').value.trim();
+            const subscribeBtn = document.getElementById('subscribeBtn');
+
+            if (!email) {
+                alert('請輸入郵箱地址');
+                return;
+            }
+
+            // 简单的邮箱格式验证
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('請輸入有效的郵箱地址');
+                return;
+            }
+
+            subscribeBtn.disabled = true;
+            subscribeBtn.innerText = '處 理 中...';
+
+            try {
+                const res = await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    alert(result.message || '訂閱成功！感謝您的支持。');
+                    document.getElementById('subscriberEmail').value = '';
+                    document.getElementById('subscribeCheck').checked = false;
+                    document.getElementById('emailInputContainer').style.display = 'none';
+                } else {
+                    alert(result.error || '訂閱失敗，請稍後再試');
+                }
+            } catch (error) {
+                console.error('訂閱錯誤:', error);
+                alert('網路異常，請稍後再試');
+            } finally {
+                subscribeBtn.disabled = false;
+                subscribeBtn.innerText = '訂 閱';
+            }
+        });
+
         document.getElementById('messageForm').onsubmit = async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
