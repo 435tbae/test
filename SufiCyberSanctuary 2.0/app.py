@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from datetime import datetime, timedelta
 import re
+import random
 
 app = Flask(__name__)
 app.secret_key = "test123456"
@@ -109,6 +110,13 @@ def profile():
     
     calmness_info = get_calmness_level(user['meditation']['total_minutes'])
     
+    # 计算进度条偏移量
+    circumference = 2 * 3.14159 * 85  # 约534
+    progress_ratio = min(user['check_in']['continuous_days'] / 30, 1)
+    offset = circumference - (circumference * progress_ratio)
+    
+    days_remaining = max(30 - user['check_in']['continuous_days'], 0)
+    
     return render_template('profile.html',
                          continuous_days=user['check_in']['continuous_days'],
                          total_days=user['check_in']['total_days'],
@@ -116,7 +124,9 @@ def profile():
                          meditation_minutes=user['meditation']['total_minutes'],
                          calmness_level=calmness_info['level'],
                          calmness_color=calmness_info['color'],
-                         daily_tasks=user['daily_tasks'])
+                         daily_tasks=user['daily_tasks'],
+                         progress_offset=round(offset),
+                         days_remaining=days_remaining)
 
 # ------------------- 留言提交接口 -------------------
 @app.route('/api/submit', methods=['POST'])
@@ -226,7 +236,6 @@ def api_prayer_draw():
         return jsonify({"error": "祈福準備中，請稍後再來"}), 400
     
     # 随机抽取一条祈福语
-    import random
     selected = random.choice(prayer_texts)
     
     # 更新用户数据
