@@ -4,6 +4,32 @@
     <meta charset="UTF-8">
     <title>Sufi Cyber Sanctuary</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        .feature-buttons {
+            margin-top: 50px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .feature-btn {
+            background: transparent;
+            border: 1px solid #666;
+            color: #AAAAAA;
+            padding: 12px 25px;
+            text-decoration: none;
+            letter-spacing: 3px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .feature-btn:hover {
+            border-color: #FFFFFF;
+            color: #FFFFFF;
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        }
+    </style>
 </head>
 <body>
     <div style="text-align: center;">
@@ -18,6 +44,13 @@
 
         <h1 class="fade-in">此為虛空，亦是圓滿</h1>
         <p class="whisper">（點擊鳥居，步入慧忍神宮 / Click to Enter...）</p>
+
+        <div class="feature-buttons">
+            <a href="/daily-prayer" class="feature-btn">每日祈願</a>
+            <a href="/daily-checkin" class="feature-btn">每日簽到</a>
+            <a href="/meditation" class="feature-btn">靜心儀式</a>
+            <a href="/profile" class="feature-btn">用戶中心</a>
+        </div>
     </div>
 </body>
 </html>

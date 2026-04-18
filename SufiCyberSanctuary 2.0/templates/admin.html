@@ -3,11 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <title>後台管理</title>
+    <style>
+        .prayer-management {
+            margin-top: 40px;
+            padding: 30px;
+            border: 1px solid #444;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .prayer-management h3 {
+            color: #ffcc66;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+        }
+
+        .add-prayer-form {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .add-prayer-form input[type="text"] {
+            background: transparent;
+            border: 1px solid #666;
+            color: #FFFFFF;
+            padding: 10px 15px;
+            width: 400px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .add-prayer-form input[type="text"]:focus {
+            border-color: #FFFFFF;
+        }
+
+        .add-prayer-form button {
+            background: transparent;
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+            padding: 10px 25px;
+            margin-left: 10px;
+            cursor: pointer;
+            letter-spacing: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .add-prayer-form button:hover {
+            background: #4CAF50;
+            color: #FFFFFF;
+        }
+
+        .prayer-list {
+            margin-top: 20px;
+        }
+
+        .prayer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .prayer-content {
+            flex: 1;
+            font-size: 1rem;
+            color: #ddd;
+        }
+
+        .prayer-time {
+            color: #666;
+            font-size: 0.8rem;
+            margin-left: 20px;
+        }
+
+        .prayer-checkbox {
+            margin-right: 15px;
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: 1px solid #f44336;
+            color: #f44336;
+            padding: 5px 15px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #f44336;
+            color: #FFFFFF;
+        }
+
+        .batch-delete-btn {
+            background: transparent;
+            border: 1px solid #f44336;
+            color: #f44336;
+            padding: 8px 20px;
+            margin-top: 15px;
+            cursor: pointer;
+            letter-spacing: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .batch-delete-btn:hover {
+            background: #f44336;
+            color: #FFFFFF;
+        }
+
+        .empty-warning {
+            color: #ff6666;
+            font-size: 1.1rem;
+            padding: 20px;
+            border: 2px dashed #ff6666;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body style="background:#111; color:#fff; padding:30px;">
 <h2>慧忍神宮｜後台管理</h2>
 <a href="/admin/logout" style="color:#ff6666;">登出</a>
 <hr>
+
+<!-- 祈福语管理模块 -->
+<div class="prayer-management">
+    <h3>祈福語管理</h3>
+
+    <div class="add-prayer-form">
+        <input type="text" id="newPrayerText" placeholder="輸入祈福語（30字以內）" maxlength="30">
+        <button onclick="addPrayerText()">添 加</button>
+    </div>
+
+    <div id="prayerListContainer">
+        {% if prayer_texts %}
+        <div class="prayer-list" id="prayerList">
+            {% for text in prayer_texts %}
+            <div class="prayer-item" data-id="{{ text.id }}">
+                <input type="checkbox" class="prayer-checkbox">
+                <div class="prayer-content">{{ text.content }}</div>
+                <div class="prayer-time">{{ text.add_time }}</div>
+                <button class="delete-btn" onclick="deletePrayerText({{ text.id }})">刪除</button>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="batch-delete-btn" onclick="batchDelete()">批量刪除</button>
+        {% else %}
+        <div class="empty-warning">
+            ⚠ 當前祈福語庫為空，請及時添加
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<hr style="margin-top: 40px;">
 
 <!-- 订阅者区域 -->
 <h3 style="margin-top: 30px; color: #aaa; letter-spacing: 5px;">訂閱者列表 ({{ subscribers|length }})</h3>
@@ -34,5 +187,103 @@
 {% else %}
 <p>暫無留言</p>
 {% endfor %}
+
+<script>
+    // 添加祈福语
+    async function addPrayerText() {
+        const input = document.getElementById('newPrayerText');
+        const content = input.value.trim();
+
+        if (!content) {
+            alert('內容不能為空');
+            return;
+        }
+
+        if (content.length > 30) {
+            alert('內容不能超過30字');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/prayer-texts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert('添加成功');
+                location.reload();
+            } else {
+                alert(data.error || '添加失敗');
+            }
+        } catch (error) {
+            console.error('添加錯誤:', error);
+            alert('網路異常，請稍後再試');
+        }
+    }
+
+    // 删除单条祈福语
+    async function deletePrayerText(id) {
+        if (!confirm('確認刪除該條祈福語？刪除後不可恢復')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/prayer-texts/${id}`, {
+                method: 'DELETE'
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert('刪除成功');
+                location.reload();
+            } else {
+                alert(data.error || '刪除失敗');
+            }
+        } catch (error) {
+            console.error('刪除錯誤:', error);
+            alert('網路異常，請稍後再試');
+        }
+    }
+
+    // 批量删除
+    async function batchDelete() {
+        const checkboxes = document.querySelectorAll('.prayer-checkbox:checked');
+
+        if (checkboxes.length === 0) {
+            alert('請先選擇要刪除的祈福語');
+            return;
+        }
+
+        if (!confirm(`確認刪除選中的 ${checkboxes.length} 條祈福語？刪除後不可恢復`)) {
+            return;
+        }
+
+        let successCount = 0;
+        for (const checkbox of checkboxes) {
+            const item = checkbox.closest('.prayer-item');
+            const id = item.dataset.id;
+
+            try {
+                const res = await fetch(`/api/prayer-texts/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    successCount++;
+                }
+            } catch (error) {
+                console.error('刪除錯誤:', error);
+            }
+        }
+
+        alert(`成功刪除 ${successCount} 條祈福語`);
+        location.reload();
+    }
+</script>
 </body>
 </html>
