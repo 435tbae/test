@@ -57,12 +57,10 @@ def reset_daily_tasks_if_needed(user_id):
     user = user_data[user_id]
     
     if user['daily_tasks']['last_reset_date'] != today:
-        user['daily_tasks'] = {
-            'check_in': False,
-            'prayer': False,
-            'meditation': False,
-            'last_reset_date': today
-        }
+        user['daily_tasks']['check_in'] = False
+        user['daily_tasks']['prayer'] = False
+        user['daily_tasks']['meditation'] = False
+        user['daily_tasks']['last_reset_date'] = today
 
 def get_calmness_level(minutes):
     """根据累计静心时长获取等级"""
@@ -90,13 +88,19 @@ def daily_prayer():
 
 @app.route('/daily-checkin')
 def daily_checkin():
-    user_id = get_user_id()
-    reset_daily_tasks_if_needed(user_id)
-    user = user_data[user_id]
-    return render_template('daily_checkin.html', 
-                         continuous_days=user['check_in']['continuous_days'],
-                         total_days=user['check_in']['total_days'],
-                         today_completed=user['daily_tasks']['check_in'])
+    try:
+        user_id = get_user_id()
+        reset_daily_tasks_if_needed(user_id)
+        user = user_data[user_id]
+        return render_template('daily_checkin.html', 
+                             continuous_days=user['check_in']['continuous_days'],
+                             total_days=user['check_in']['total_days'],
+                             today_completed=user['daily_tasks']['check_in'])
+    except Exception as e:
+        print(f"Error in daily_checkin: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Error: {str(e)}", 500
 
 @app.route('/meditation')
 def meditation():
@@ -104,29 +108,35 @@ def meditation():
 
 @app.route('/profile')
 def profile():
-    user_id = get_user_id()
-    reset_daily_tasks_if_needed(user_id)
-    user = user_data[user_id]
-    
-    calmness_info = get_calmness_level(user['meditation']['total_minutes'])
-    
-    # 计算进度条偏移量
-    circumference = 2 * 3.14159 * 85  # 约534
-    progress_ratio = min(user['check_in']['continuous_days'] / 30, 1)
-    offset = circumference - (circumference * progress_ratio)
-    
-    days_remaining = max(30 - user['check_in']['continuous_days'], 0)
-    
-    return render_template('profile.html',
-                         continuous_days=user['check_in']['continuous_days'],
-                         total_days=user['check_in']['total_days'],
-                         prayer_count=user['prayer']['total_count'],
-                         meditation_minutes=user['meditation']['total_minutes'],
-                         calmness_level=calmness_info['level'],
-                         calmness_color=calmness_info['color'],
-                         daily_tasks=user['daily_tasks'],
-                         progress_offset=round(offset),
-                         days_remaining=days_remaining)
+    try:
+        user_id = get_user_id()
+        reset_daily_tasks_if_needed(user_id)
+        user = user_data[user_id]
+        
+        calmness_info = get_calmness_level(user['meditation']['total_minutes'])
+        
+        # 计算进度条偏移量
+        circumference = 2 * 3.14159 * 85  # 约534
+        progress_ratio = min(user['check_in']['continuous_days'] / 30, 1)
+        offset = circumference - (circumference * progress_ratio)
+        
+        days_remaining = max(30 - user['check_in']['continuous_days'], 0)
+        
+        return render_template('profile.html',
+                             continuous_days=user['check_in']['continuous_days'],
+                             total_days=user['check_in']['total_days'],
+                             prayer_count=user['prayer']['total_count'],
+                             meditation_minutes=user['meditation']['total_minutes'],
+                             calmness_level=calmness_info['level'],
+                             calmness_color=calmness_info['color'],
+                             daily_tasks=user['daily_tasks'],
+                             progress_offset=round(offset),
+                             days_remaining=days_remaining)
+    except Exception as e:
+        print(f"Error in profile: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Error: {str(e)}", 500
 
 # ------------------- 留言提交接口 -------------------
 @app.route('/api/submit', methods=['POST'])
